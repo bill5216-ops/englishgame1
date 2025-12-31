@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>英文聽力對比挑戰</title>
+    <title>英文聽力對比練習 (小寫版)</title>
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; text-align: center; background-color: #FFF9E3; margin: 0; padding: 10px; touch-action: manipulation; }
-        .box { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: block; max-width: 450px; margin: auto; min-height: 500px; position: relative; }
+        .box { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: block; max-width: 450px; margin: auto; min-height: 520px; position: relative; }
         h1 { color: #FF6B6B; font-size: 26px; margin: 5px 0; }
         
         .score-board { font-size: 18px; color: #555; margin-bottom: 10px; background: #E0F7FA; padding: 10px; border-radius: 15px; display: flex; justify-content: space-around; }
         .progress-text { font-size: 14px; color: #888; margin-bottom: 5px; }
 
-        /* 選項按鈕 */
         .word-btn { 
-            display: block; width: 100%; font-size: 40px; margin: 12px 0; padding: 15px 0; cursor: pointer;
+            display: block; width: 100%; font-size: 45px; margin: 12px 0; padding: 15px 0; cursor: pointer;
             border: 4px solid #4ECDC4; border-radius: 20px; background-color: white; color: #4ECDC4;
-            font-weight: bold; transition: 0.2s;
+            font-weight: bold; transition: 0.2s; text-transform: lowercase; /* 確保 CSS 層級也是小寫 */
         }
         .word-btn.correct { background-color: #4CAF50 !important; color: white !important; border-color: #388E3C; }
         .word-btn.wrong { background-color: #FF6B6B !important; color: white !important; border-color: #D64545; }
         .word-btn:disabled { opacity: 0.8; cursor: default; }
 
-        /* 教學對比區 */
         .teach-section { margin-top: 15px; padding: 15px; border: 2px dashed #FFD93D; border-radius: 15px; background: #FFFDE7; }
         .teach-btn { 
             font-size: 18px; padding: 10px 15px; margin: 5px; cursor: pointer;
@@ -35,7 +33,6 @@
             box-shadow: 0 5px 0 #D64545; width: 80%; margin: 10px 0; font-weight: bold;
         }
 
-        /* 下一題按鈕 */
         #next-btn {
             display: none; width: 90%; font-size: 24px; padding: 15px; margin: 20px auto;
             background-color: #4ECDC4; color: white; border: none; border-radius: 15px;
@@ -54,7 +51,7 @@
     </div>
 
     <div class="box">
-        <h1>👂 英文聽力對比練習</h1>
+        <h1>👂 英文聽力挑戰 (小寫版)</h1>
         <div class="progress-text">進度：<span id="current-task">1</span> / 30</div>
         <div class="score-board"><div>答對題數：<span id="score" style="color:#FF6B6B; font-weight:bold;">0</span></div></div>
 
@@ -64,7 +61,7 @@
         <div id="message" style="font-size: 22px; height: 30px; margin: 10px; font-weight: bold;"></div>
 
         <div id="teach-area" class="teach-section" style="display: none;">
-            <div style="font-size: 14px; color: #888; margin-bottom: 5px;">多聽幾次，比較看看差別：</div>
+            <div style="font-size: 14px; color: #888; margin-bottom: 5px;">聽聽看對比，再按下一題：</div>
             <div id="teach-btns"></div>
         </div>
 
@@ -79,19 +76,19 @@
     </div>
 
     <script>
-        // 已剔除 SON, SUN
+        // 單字庫已全部改為小寫
         const wordData = [
-            { words: ["GET", "GOT"], last: -1 }, { words: ["MAT", "MET"], last: -1 },
-            { words: ["FIT", "FAT"], last: -1 }, { words: ["JET", "JOT"], last: -1 },
-            { words: ["MAN", "MEN"], last: -1 }, { words: ["BIT", "BUT"], last: -1 },
-            { words: ["MOP", "MAP"], last: -1 }, { words: ["CAP", "COP"], last: -1 },
-            { words: ["DIG", "DUG"], last: -1 }, { words: ["WIG", "WAG"], last: -1 },
-            { words: ["CHIP", "CHOP"], last: -1 }, { words: ["LIG", "LEG"], last: -1 },
-            { words: ["BIG", "BAG"], last: -1 }, { words: ["BEG", "BAG"], last: -1 },
-            { words: ["BUG", "BEG"], last: -1 }, { words: ["BOG", "BAG"], last: -1 },
-            { words: ["LAP", "LOP"], last: -1 }, { words: ["CAT", "CUT"], last: -1 },
-            { words: ["BIT", "BAT"], last: -1 }, { words: ["SHIP", "SHEEP"], last: -1 },
-            { words: ["BED", "BAD"], last: -1 }, { words: ["PEN", "PAN"], last: -1 }
+            { words: ["get", "got"], last: -1 }, { words: ["mat", "met"], last: -1 },
+            { words: ["fit", "fat"], last: -1 }, { words: ["jet", "jot"], last: -1 },
+            { words: ["man", "men"], last: -1 }, { words: ["bit", "but"], last: -1 },
+            { words: ["mop", "map"], last: -1 }, { words: ["cap", "cop"], last: -1 },
+            { words: ["dig", "dug"], last: -1 }, { words: ["wig", "wag"], last: -1 },
+            { words: ["chip", "chop"], last: -1 }, { words: ["lig", "leg"], last: -1 },
+            { words: ["big", "bag"], last: -1 }, { words: ["beg", "bag"], last: -1 },
+            { words: ["bug", "beg"], last: -1 }, { words: ["bog", "bag"], last: -1 },
+            { words: ["lap", "lop"], last: -1 }, { words: ["cat", "cut"], last: -1 },
+            { words: ["bit", "bat"], last: -1 }, { words: ["ship", "sheep"], last: -1 },
+            { words: ["bed", "bad"], last: -1 }, { words: ["pen", "pan"], last: -1 }
         ];
 
         let currentCorrect = "";
@@ -113,8 +110,6 @@
 
         function initGame() {
             if (total >= 30) { showFinal(); return; }
-            
-            // 重置介面
             document.getElementById('message').innerText = "";
             document.getElementById('teach-area').style.display = "none";
             document.getElementById('next-btn').style.display = "none";
@@ -122,14 +117,12 @@
             document.getElementById('current-task').innerText = total + 1;
             document.getElementById('score').innerText = score;
 
-            // 選題
             const pairObj = wordData[Math.floor(Math.random() * wordData.length)];
             let idx = (pairObj.last === -1) ? Math.floor(Math.random() * 2) : 1 - pairObj.last;
             pairObj.last = idx;
             currentPair = pairObj.words;
             currentCorrect = currentPair[idx];
             
-            // 選項
             const choiceDiv = document.getElementById('choices');
             choiceDiv.innerHTML = ""; 
             [...currentPair].sort(() => Math.random() - 0.5).forEach(w => {
@@ -140,7 +133,6 @@
                 choiceDiv.appendChild(btn);
             });
 
-            // 教學按鈕預備
             const teachDiv = document.getElementById('teach-btns');
             teachDiv.innerHTML = "";
             currentPair.forEach(w => {
@@ -179,11 +171,10 @@
             } else {
                 btn.classList.add('wrong');
                 msg.style.color = "#FF6B6B";
-                msg.innerText = "❌ 答錯了，聽聽對比吧！";
+                msg.innerText = "❌ 聽聽看對比喔！";
                 playNote(150, 0.4);
             }
 
-            // 顯示對比教學與下一題按鈕
             document.getElementById('teach-area').style.display = "block";
             document.getElementById('next-btn').style.display = "block";
             total++;
