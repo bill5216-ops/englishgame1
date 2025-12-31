@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>英文聽力對比挑戰</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; text-align: center; background-color: #FFF9E3; margin: 0; padding: 10px; touch-action: manipulation; }
+        .box { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: block; max-width: 450px; margin: auto; min-height: 500px; position: relative; }
+        h1 { color: #FF6B6B; font-size: 26px; margin: 5px 0; }
+        
+        .score-board { font-size: 18px; color: #555; margin-bottom: 10px; background: #E0F7FA; padding: 10px; border-radius: 15px; display: flex; justify-content: space-around; }
+        .progress-text { font-size: 14px; color: #888; margin-bottom: 5px; }
+
+        /* 選項按鈕 */
+        .word-btn { 
+            display: block; width: 100%; font-size: 40px; margin: 12px 0; padding: 15px 0; cursor: pointer;
+            border: 4px solid #4ECDC4; border-radius: 20px; background-color: white; color: #4ECDC4;
+            font-weight: bold; transition: 0.2s;
+        }
+        .word-btn.correct { background-color: #4CAF50 !important; color: white !important; border-color: #388E3C; }
+        .word-btn.wrong { background-color: #FF6B6B !important; color: white !important; border-color: #D64545; }
+        .word-btn:disabled { opacity: 0.8; cursor: default; }
+
+        /* 教學對比區 */
+        .teach-section { margin-top: 15px; padding: 15px; border: 2px dashed #FFD93D; border-radius: 15px; background: #FFFDE7; }
+        .teach-btn { 
+            font-size: 18px; padding: 10px 15px; margin: 5px; cursor: pointer;
+            background-color: white; border: 2px solid #FFD93D; border-radius: 10px; color: #856404;
+        }
+
+        #listen-btn { 
+            font-size: 22px; padding: 12px 0; cursor: pointer;
+            background-color: #FF6B6B; color: white; border: none; border-radius: 50px;
+            box-shadow: 0 5px 0 #D64545; width: 80%; margin: 10px 0; font-weight: bold;
+        }
+
+        /* 下一題按鈕 */
+        #next-btn {
+            display: none; width: 90%; font-size: 24px; padding: 15px; margin: 20px auto;
+            background-color: #4ECDC4; color: white; border: none; border-radius: 15px;
+            box-shadow: 0 5px 0 #36a39c; cursor: pointer; font-weight: bold;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        #result-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 10;">
+        <button style="font-size: 28px; padding: 20px 40px; background: #4ECDC4; color: white; border-radius: 20px; border:none;" onclick="startGame()">點我開始 30 題挑戰！ 🚀</button>
+    </div>
+
+    <div class="box">
+        <h1>👂 英文聽力對比練習</h1>
+        <div class="progress-text">進度：<span id="current-task">1</span> / 30</div>
+        <div class="score-board"><div>答對題數：<span id="score" style="color:#FF6B6B; font-weight:bold;">0</span></div></div>
+
+        <button id="listen-btn" onclick="playCorrectWord()">🔊 聽題目單字</button>
+        
+        <div id="choices"></div>
+        <div id="message" style="font-size: 22px; height: 30px; margin: 10px; font-weight: bold;"></div>
+
+        <div id="teach-area" class="teach-section" style="display: none;">
+            <div style="font-size: 14px; color: #888; margin-bottom: 5px;">多聽幾次，比較看看差別：</div>
+            <div id="teach-btns"></div>
+        </div>
+
+        <button id="next-btn" onclick="initGame()">下一題 ➡️</button>
+    </div>
+
+    <div id="result-overlay">
+        <div style="font-size: 32px; color: #FF6B6B; margin-bottom: 20px;">挑戰結束！</div>
+        <div style="font-size: 24px;">總得分：<span id="final-score" style="color:red; font-size:40px;">0</span> / 30</div>
+        <div style="font-size: 24px; margin: 15px;">正確率：<span id="final-percent">0%</span></div>
+        <button style="font-size: 24px; padding: 15px 30px; background: #4ECDC4; color: white; border-radius: 15px; border:none;" onclick="resetGame()">再挑戰一次 🔄</button>
+    </div>
+
+    <script>
+        // 已剔除 SON, SUN
+        const wordData = [
+            { words: ["GET", "GOT"], last: -1 }, { words: ["MAT", "MET"], last: -1 },
+            { words: ["FIT", "FAT"], last: -1 }, { words: ["JET", "JOT"], last: -1 },
+            { words: ["MAN", "MEN"], last: -1 }, { words: ["BIT", "BUT"], last: -1 },
+            { words: ["MOP", "MAP"], last: -1 }, { words: ["CAP", "COP"], last: -1 },
+            { words: ["DIG", "DUG"], last: -1 }, { words: ["WIG", "WAG"], last: -1 },
+            { words: ["CHIP", "CHOP"], last: -1 }, { words: ["LIG", "LEG"], last: -1 },
+            { words: ["BIG", "BAG"], last: -1 }, { words: ["BEG", "BAG"], last: -1 },
+            { words: ["BUG", "BEG"], last: -1 }, { words: ["BOG", "BAG"], last: -1 },
+            { words: ["LAP", "LOP"], last: -1 }, { words: ["CAT", "CUT"], last: -1 },
+            { words: ["BIT", "BAT"], last: -1 }, { words: ["SHIP", "SHEEP"], last: -1 },
+            { words: ["BED", "BAD"], last: -1 }, { words: ["PEN", "PAN"], last: -1 }
+        ];
+
+        let currentCorrect = "";
+        let currentPair = [];
+        let score = 0;
+        let total = 0;
+        const synth = window.speechSynthesis;
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            resetGame();
+        }
+
+        function resetGame() {
+            score = 0; total = 0;
+            document.getElementById('result-overlay').style.display = 'none';
+            initGame();
+        }
+
+        function initGame() {
+            if (total >= 30) { showFinal(); return; }
+            
+            // 重置介面
+            document.getElementById('message').innerText = "";
+            document.getElementById('teach-area').style.display = "none";
+            document.getElementById('next-btn').style.display = "none";
+            document.getElementById('listen-btn').disabled = false;
+            document.getElementById('current-task').innerText = total + 1;
+            document.getElementById('score').innerText = score;
+
+            // 選題
+            const pairObj = wordData[Math.floor(Math.random() * wordData.length)];
+            let idx = (pairObj.last === -1) ? Math.floor(Math.random() * 2) : 1 - pairObj.last;
+            pairObj.last = idx;
+            currentPair = pairObj.words;
+            currentCorrect = currentPair[idx];
+            
+            // 選項
+            const choiceDiv = document.getElementById('choices');
+            choiceDiv.innerHTML = ""; 
+            [...currentPair].sort(() => Math.random() - 0.5).forEach(w => {
+                const btn = document.createElement('button');
+                btn.innerText = w;
+                btn.className = 'word-btn';
+                btn.onclick = () => check(w, btn);
+                choiceDiv.appendChild(btn);
+            });
+
+            // 教學按鈕預備
+            const teachDiv = document.getElementById('teach-btns');
+            teachDiv.innerHTML = "";
+            currentPair.forEach(w => {
+                const btn = document.createElement('button');
+                btn.innerText = "聽 " + w;
+                btn.className = 'teach-btn';
+                btn.onclick = () => speak(w);
+                teachDiv.appendChild(btn);
+            });
+            
+            setTimeout(playCorrectWord, 600);
+        }
+
+        function speak(t) {
+            synth.cancel();
+            const u = new SpeechSynthesisUtterance(t);
+            u.lang = 'en-US';
+            u.rate = 0.6; 
+            synth.speak(u);
+        }
+
+        function playCorrectWord() { speak(currentCorrect); }
+
+        function check(selected, btn) {
+            const btns = document.querySelectorAll('.word-btn');
+            btns.forEach(b => b.disabled = true);
+            document.getElementById('listen-btn').disabled = true;
+
+            const msg = document.getElementById('message');
+            if (selected === currentCorrect) {
+                score++;
+                btn.classList.add('correct');
+                msg.style.color = "#4CAF50";
+                msg.innerText = "⭐ 答對了！";
+                playNote(880, 0.1); playNote(1100, 0.2);
+            } else {
+                btn.classList.add('wrong');
+                msg.style.color = "#FF6B6B";
+                msg.innerText = "❌ 答錯了，聽聽對比吧！";
+                playNote(150, 0.4);
+            }
+
+            // 顯示對比教學與下一題按鈕
+            document.getElementById('teach-area').style.display = "block";
+            document.getElementById('next-btn').style.display = "block";
+            total++;
+        }
+
+        function showFinal() {
+            document.getElementById('result-overlay').style.display = 'flex';
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-percent').innerText = Math.round((score / 30) * 100) + "%";
+        }
+
+        function playNote(f, d) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.value = f; o.start();
+                g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + d);
+                o.stop(ctx.currentTime + d);
+            } catch(e) {}
+        }
+    </script>
+</body>
+</html>
